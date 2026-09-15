@@ -109,21 +109,43 @@ void * new_malloc(size_t size) {
     return NULL;
 }
 
-void new_free(void * ptr) {
+void new_free(void *ptr) {
+
     if (ptr == NULL) {
         return;
     }
 
-    /*
-     * ptr points to:
-     *
-     * [header][user data]
-     *         ^
-     *         ptr
-     *
-     * Move backwards one header.
-     */
     m_header *block = ((m_header *)ptr) - 1;
 
     block->in_use = 0;
+
+    /* Coalesce with next */
+    if (block->next != NULL &&
+        block->next->in_use == 0) {
+
+        m_header *next = block->next;
+
+        block->size += sizeof(m_header) + next->size;
+
+        block->next = next->next;
+
+        if (block->next != NULL) {
+            block->next->prev = block;
+        }
+    }
+
+    /* Coalesce with previous */
+    if (block->prev != NULL &&
+        block->prev->in_use == 0) {
+
+        m_header *prev = block->prev;
+
+        prev->size += sizeof(m_header) + block->size;
+
+        prev->next = block->next;
+
+        if (block->next != NULL) {
+            block->next->prev = prev;
+        }
+    }
 }

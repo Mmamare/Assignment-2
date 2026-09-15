@@ -1,0 +1,16 @@
+(1) Allocations fail in ./test 3 because the allocator suffers from external fragmentation. When blocks are 
+freed, they are markeed as available but adjacent free blocks are not combined. Over many malloc/free operations, 
+memory becomes divided into many small free blocks. Even when enough total free memory exists, there may not be
+one contiguous free block largee enough for the requested allocation.
+
+(2) The throughput plot shows that coalescing allocator generally performs as well as or better than the original 
+allocator, especially for larger allocation sizes. For example, at 256vbytees, the coalescing version has a throughput
+of about 16.3 million operations per second compared with about 10.4 million for the original version. Although coalescing adds some 
+work during free(), it reduces fragmentation and allows memory to be reused more efficiently. As a result, feweer allocation attempts fail
+and the allocator spends less time searching through fragmented free blocks.
+
+(3) The coalescing allocator has a much better fail rate, especially as the maximum allocation size increases.
+The original allocator's failure rate increases from about 10% at 32 bytes to about 63% at 256 bytes, while the coalescing allocator remains close
+to 10% for all tested sizes. This happens because the original allocator leaves adjacent free blocks separated, causing external fragmentation. coalescing
+combines neighboring free blocks into larger contiguous regions, making it much more likely that new allocation requests can find 
+a sufficiently large free block.
